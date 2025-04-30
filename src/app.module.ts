@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import configuration from 'configuration';
 import { DataSource } from 'typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { DataSource } from 'typeorm';
       }),
     }),
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}
