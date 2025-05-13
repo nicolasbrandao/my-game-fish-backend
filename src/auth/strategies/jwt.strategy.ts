@@ -66,7 +66,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     if (!jwtSecret) {
       const jwtErrorMsg =
-        'CRITICAL JWT ERROR: JWT_SE1CRET is not defined for JwtStrategy. Application cannot start securely.';
+        'CRITICAL JWT ERROR: JWT_SECRET is not defined for JwtStrategy. Application cannot start securely.';
       this.logger.error(jwtErrorMsg);
       throw new Error(jwtErrorMsg);
     }

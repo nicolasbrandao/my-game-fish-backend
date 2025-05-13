@@ -1,17 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   Logger,
+  Post,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { appConfiguration } from 'configuration';
+import { User } from 'entities/user.entity';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TransformedGoogleProfile } from './strategies/google.strategy';
 
 @Controller('auth')
@@ -83,5 +89,41 @@ export class AuthController {
       const errorRedirectUrl = `${this.appConfig.FRONTEND_URL}/login?error=${errorQueryParam}`;
       res.redirect(errorRedirectUrl);
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(
+    @Req() req: Request,
+  ): Omit<
+    User,
+    'googleAccessToken' | 'googleRefreshToken' | 'googleProfileJson'
+  > {
+    this.logger.log(
+      `User profile requested for user ID: ${(req.user as User).id}`,
+    );
+    const user = req.user as User;
+
+    const {
+      googleAccessToken,
+      googleRefreshToken,
+      googleProfileJson,
+      ...safeUser
+    } = user;
+    return safeUser;
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) res: Response) {
+    this.logger.log('Logout requested.');
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: this.appConfig.NODE_ENV === 'production',
+      path: '/',
+      sameSite: 'lax',
+    });
+
+    return { message: 'Successfully logged out' };
   }
 }
