@@ -12,6 +12,11 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# utils
+.venv
+stdout.txt
+.codeconcat_config.json
+
 # OS
 .DS_Store
 
@@ -51,6 +56,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+.venv
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

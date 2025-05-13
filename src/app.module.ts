@@ -1,31 +1,41 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import configuration from 'configuration';
-import { DataSource } from 'typeorm';
+import { appConfiguration } from 'configuration';
+import { User } from 'entities/user.entity';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [configuration],
+      isGlobal: true,
+      load: [appConfiguration],
+      envFilePath: '.env',
     }),
-
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (cfg: ConfigService) => ({
-        type: 'postgres',
-        host: cfg.get<string>('DB_HOST'),
-        port: cfg.get<number>('DB_PORT'),
-        username: cfg.get<string>('DB_USER'),
-        password: cfg.get<string>('DB_PASS'),
-        database: cfg.get<string>('DB_NAME'),
-        entities: [],
-        synchronize: cfg.get('NODE_ENV') !== 'production',
-      }),
+      inject: [appConfiguration.KEY],
+      useFactory: (appCfg: ReturnType<typeof appConfiguration>) => {
+        const dbOptions: DataSourceOptions = {
+          type: 'postgres',
+          host: appCfg.database.host,
+          port: appCfg.database.port,
+          username: appCfg.database.username,
+          password: appCfg.database.password,
+          database: appCfg.database.name,
+          entities: [User],
+          synchronize: appCfg.database.synchronize,
+          migrationsRun: appCfg.database.migrationsRun,
+          logging:
+            appCfg.NODE_ENV !== 'production' ? ['query', 'error'] : ['error'],
+          migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+        };
+        return dbOptions;
+      },
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
